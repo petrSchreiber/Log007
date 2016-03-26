@@ -1,0 +1,99 @@
+#INCLUDE "..\..\log007.tBasicU"
+
+$log007_file     = APP_SourcePath + "log007.txt"
+
+$log007_goodNews = "Miss Anders! I didn’t recognize you with your clothes on."
+$log007_badNews  = "The whole office goes up in smoke and that bloody thing survives."
+
+Function test_Init_PurgeSpecified_FileRestarted()
+  FILE_Save($log007_file, "temp")              
+  Dim subject As log007($log007_file, TRUE)
+  
+  ut_assertIsTrue(FILE_Size($log007_file) <> 4)  
+End Function
+
+Function test_Init_PurgeOff_FileNotHurt()
+  FILE_Save($log007_file, "temp")      
+  Dim subject As log007($log007_file)
+  
+  String content = FILE_Load($log007_file)
+  ut_assertIsTrue(StartsWith(content, "temp"))  
+End Function
+
+Function test_Note_MessageSpecified_ContainsDate()      
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  String dateField = Parse$(content, " ", 1) 
+  ut_assertIsTrue(Tally(dateField, "-") = 2)
+End Function
+
+Function test_Note_MessageSpecified_ContainsTime()      
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  String timeField = Parse$(content, " ", 2) 
+  ut_assertIsTrue(Tally(timeField, ":") = 2)
+End Function
+
+Function test_Note_MessageSpecified_ContainsSeverity()      
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  String severity = Grab$(content, "(", ")")
+  ut_assertIsTrue(severity = "DEBUG")
+End Function
+
+Function test_Note_MessageSpecified_ContainsContext()      
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  String context = Grab$(content, "[", "]")   
+  ut_assertIsTrue(context = "Unit test")
+End Function
+
+Function test_Note_MessageSpecified_ContainsMessage()      
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  String message = RTrim$(Remain$(content, "] "), $CRLF)
+  ut_assertIsTrue(message = $log007_goodNews)
+End Function
+
+Function test_InTrouble_NoErrorLogged_False()
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("debug", "Unit test", $log007_goodNews)
+
+  ut_assertIsFalse(subject.InTrouble)
+End Function
+
+Function test_InTrouble_ErrorLogged_True()
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("error", "Unit test", $log007_goodNews)
+  
+  ut_assertIsTrue(subject.InTrouble)
+End Function
+
+Function test_LastTrouble_ErrorLogged_ContainsMessage()
+  Dim subject As log007($log007_file, TRUE)
+  
+  subject.Note("error", "Unit test", $log007_badNews)
+  
+  ut_assertIsTrue(InStr(subject.LastTrouble, $log007_badNews) > 0)
+End Function  
+
+Function test_teardown()
+  FILE_Kill($log007_file)
+End Function
