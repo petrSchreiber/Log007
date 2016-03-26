@@ -16,9 +16,9 @@ Type Log007
     
     Function ReportFatal(context As String, message As String) 
       MsgBox 0,
-             context, 
+             StrFormat$("Fatal error has occured, program will be aborted.{1}{2}", $CRLF(2), message),
              %MB_ICONERROR | %MB_OK,
-             StrFormat$("Fatal error has occured, program will be aborted.{1}{2}", $CRLF(2), description)
+             context
       Stop
     End Function                                        
     
