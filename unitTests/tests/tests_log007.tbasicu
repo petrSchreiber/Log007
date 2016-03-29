@@ -92,7 +92,30 @@ Function test_LastTrouble_ErrorLogged_ContainsMessage()
   subject.Note("error", "Unit test", $log007_badNews)
   
   ut_assertIsTrue(InStr(subject.LastTrouble, $log007_badNews) > 0)
-End Function  
+End Function
+
+Function test_TakeNotes_SetToFalse_NoteDoesNotWrite()      
+  Dim subject As log007($log007_file)
+  
+  subject.TakeNotes(FALSE)
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)
+  ut_assertIsTrue(Len(content) = 0)
+End Function
+
+Function test_TakeNotes_SetToFalseAndBackToTrue_WritesAgain()      
+  Dim subject As log007($log007_file)
+  
+  subject.TakeNotes(FALSE)
+  subject.Note("error", "Unit test", $log007_badNews)
+  subject.TakeNotes(TRUE)
+  subject.Note("debug", "Unit test", $log007_goodNews)
+  
+  String content = FILE_Load($log007_file)  
+  ut_assertIsTrue(InStr(content, $log007_badNews) = 0)
+  ut_assertIsTrue(InStr(content, $log007_goodNews) > 0)
+End Function
 
 Function test_teardown()
   FILE_Kill($log007_file)

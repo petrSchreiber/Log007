@@ -4,17 +4,18 @@ Uses "File"
 
 Type Log007
   Private
-    fileName  As String
+    _fileName   As String
     
-    lastError As String
+    _lastTrouble  As String
+    _takeNotes As Long
     
-    Function LevelOf(severity As String) As Long
+    Function _levelOf(severity As String) As Long
       String severities(5) = "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
 
       Return Array Scan severities(), Collate Ucase, =severity
     End Function
     
-    Function ReportFatal(context As String, message As String) 
+    Function _reportFatal(context As String, message As String) 
       MsgBox 0,
              StrFormat$("Fatal error has occured, program will be aborted.{1}{2}", $CRLF(2), message),
              %MB_ICONERROR | %MB_OK,
@@ -24,9 +25,10 @@ Type Log007
     
   Public
     Function _Create(fileName As String, Optional purge As Long = FALSE)
-      Me.fileName = fileName                               
+      Me._fileName = fileName                               
+      Me._takeNotes = TRUE
       
-      If purge Then FILE_Kill(Me.fileName)
+      If purge Then FILE_Kill(Me._fileName)
     End Function
     
     Function Note(severity As String, context As String, message As String)
@@ -42,23 +44,29 @@ Type Log007
                          context,
                          message)
       
-      FILE_Append(Me.fileName, logLine + $CRLF)  
+      If Me._takeNotes Then
+        FILE_Append(Me._fileName, logLine + $CRLF)  
+      End If  
                              
-      Select Case Me.LevelOf(severity)
-        Case Me.LevelOf("error")          
-          Me.lastError = logLine
+      Select Case Me._levelOf(severity)
+        Case Me._levelOf("error")          
+          Me._lastTrouble = logLine
       
-        Case > Me.LevelOf("error")
-          Me.ReportFatal(context, message)        
+        Case > Me._levelOf("error")
+          Me._reportFatal(context, message)        
         
       End Select
     End Function
     
+    Function TakeNotes(flag As Long)
+      Me._takeNotes = flag
+    End Function
+    
     Function InTrouble() As Long
-      Return Len(Me.lastError)
+      Return Len(Me._lastTrouble)
     End Function
     
     Function LastTrouble() As String
-      Return Me.lastError
+      Return Me._lastTrouble
     End Function
 End Type
